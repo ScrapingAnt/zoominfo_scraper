@@ -6,15 +6,14 @@ import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate
 from tenacity import retry, stop_after_attempt
+import click
 
-import config
 
-
-def make_scrapingant_request(target_url):
+def make_scrapingant_request(target_url, rapidapi_key):
     print(f'getting page {target_url}')
     headers = {
         'x-rapidapi-host': "scrapingant.p.rapidapi.com",
-        'x-rapidapi-key': config.RAPIDAPI_KEY,
+        'x-rapidapi-key': rapidapi_key,
     }
     r = requests.post(
         'https://scrapingant.p.rapidapi.com/post',
@@ -24,9 +23,11 @@ def make_scrapingant_request(target_url):
     return r.text
 
 
+# Sometimes we cant find table of contacts on the page. Usually it's related to recaptcha.
+# In this case we have to retry our request.
 @retry(stop=stop_after_attempt(2), retry_error_callback=list)
-def get_contacts_from_page(page_url):
-    page_html = make_scrapingant_request(page_url)
+def get_contacts_from_page(page_url, rapidapi_key):
+    page_html = make_scrapingant_request(page_url, rapidapi_key)
     soup = BeautifulSoup(page_html, 'html.parser')
     contacts = []
     table = soup.find('table', attrs={'class': 'page_table'})
@@ -44,19 +45,28 @@ def get_contacts_from_page(page_url):
     return contacts, pages_count
 
 
-def get_company_contacts(company_url):
-    contacts, pages_count = get_contacts_from_page(company_url)
+def get_company_contacts(company_url, rapidapi_key):
+    contacts, pages_count = get_contacts_from_page(company_url, rapidapi_key)
     for page_num in range(2, min(5, pages_count) + 1):
-        contacts_from_page, _ = get_contacts_from_page(f'{company_url}?pageNum={page_num}')
+        contacts_from_page, _ = get_contacts_from_page(f'{company_url}?pageNum={page_num}', rapidapi_key)
         contacts.extend(contacts_from_page)
     return contacts
 
 
-def main():
-    if not config.RAPIDAPI_KEY:
-        print('please fill RAPIDAPI_KEY in config.py file. Details: https://rapidapi.com/okami4kak/api/scrapingant/')
-        return
-    contacts = get_company_contacts(config.COMPANY_URL)
+def validate_company_url(ctx, param, value):
+    if re.match(r'https:\/\/www\.zoominfo\.com\/pic\/(.*)\/\d+', value):
+        return value
+    else:
+        raise click.BadParameter(
+            'Invalid url, correct example: https://www.zoominfo.com/pic/mental-health-america-inc/76809493')
+
+
+@click.command()
+@click.argument('company_url', type=str, required=True, callback=validate_company_url)
+@click.option("--rapidapi_key", type=str, required=True,
+              help="Api key from https://rapidapi.com/okami4kak/api/scrapingant")
+def main(company_url, rapidapi_key):
+    contacts = get_company_contacts(company_url, rapidapi_key)
     print(tabulate(contacts, headers=['Contact Name', 'Job Title', 'Location']))
 
 
