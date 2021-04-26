@@ -3,10 +3,10 @@ This project shows how to use <a href="https://scrapingant.com">ScrapingAnt</a> 
 
 ScrapingAnt takes away all the messy work necessary to set up a browser and proxies for crawling. So you can just focus on your data.
 ## Usage
-To run this code you need RapidApi key. Just go to <a href="https://rapidapi.com/okami4kak/api/scrapingant">ScrapingAnt page on Rapidapi</a>, and click "Subscribe to Test" button. After that you have to select plan(there is a free one including 100 requests). After that you can find you api key in "X-RapidAPI-Key" field on <a href="https://rapidapi.com/okami4kak/api/scrapingant/endpoints">endpoints</a> page.
+To run this code you need ScrapingAnt API token. Just go to <a href="https://scrapingant.com">ScrapingAnt</a>, and register a new account. You will get 1000 api calls for free. API token will be available on <a href="https://app.scrapingant.com/dashboard">ScrapingAnt Dashboard</a>.
 #### With Docker
 ```shell script
-docker build -t zoominfo_parser . && docker run -it zoominfo_parser https://www.zoominfo.com/c/mental-health-america-inc/76809493 --rapidapi_key <RAPID_API_KEY> --email_format first_last
+docker build -t zoominfo_parser . && docker run -it zoominfo_parser https://www.zoominfo.com/c/mental-health-america-inc/76809493 --scrapingant_api_token <SCRAPINGANT_API_TOKEN> --email_format first_last
 ```
 
 #### Without Docker
@@ -16,7 +16,7 @@ $ git clone https://github.com/ScrapingAnt/zoominfo_scraper.git
 $ cd zoominfo_scraper
 $ pip install -r requirements.txt
 $ python main.py --help
-$ python main.py https://www.zoominfo.com/c/mental-health-america-inc/76809493 --rapidapi_key <RAPID_API_KEY> --email_format first_last
+$ python main.py https://www.zoominfo.com/c/mental-health-america-inc/76809493 --scrapingant_api_token <SCRAPINGANT_API_TOKEN> --email_format first_last
 ```
 
 #### Sample output:
